@@ -1,0 +1,300 @@
+<!-- <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>такси Нурлат</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            font-family: Arial, sans-serif;
+        }
+        #map {
+            width: 100%;
+            height: 550px; 
+            margin-bottom: 0px;
+            border-radius: 0px;
+            overflow: hidden;
+        }
+        #controls {
+            padding: 0px;
+        }
+        .input-group {
+            margin-bottom: 0px;
+        }
+        input, button {
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 0px;
+            margin: 0px 0;
+            border-radius: 10px;
+            border: 0px solid #ccc;
+            text-align: center;
+        }
+        #requestRide {
+            margin-top: 10px;
+            padding: 15px 10px;
+            background-color: #000000; 
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            width: 75%;
+            cursor: pointer;
+            font-size: 15px;
+            margin: 10px auto;
+            height: 50px;
+            position: relative;        
+            display: flex;
+            justify-content: center;
+            align-items: center; 
+        }
+        #requestRide:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <div id="controls">
+        <div class="input-group">
+            <input type="text" id="start" placeholder="Откуда?">
+            <input type="text" id="end" placeholder="Куда?"> 
+        </div>
+
+        <button id="requestRide" disabled>Заказать</button>
+    </div>
+
+    <script>
+        ymaps.ready(init);
+        let myMap, userPlacemark;
+
+        function init(){
+            myMap = new ymaps.Map("map", {
+                center: [54.428122, 50.804958], 
+                zoom: 12
+            });
+        }
+
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                const userCoords = [position.coords.latitude, position.coords.longitude];
+                myMap.setCenter(userCoords, 14);
+                userPlacemark = new ymaps.Placemark(userCoords, {
+                    hintContent: 'Вы здесь'
+                }, {
+                    iconColor: '#1E90FF'
+                });
+                myMap.geoObjects.add(userPlacemark);
+            }, function(error) {
+                alert('Не удалось определить ваше местоположение.');
+            });
+        } else {
+            alert('Ваш браузер не поддерживает геолокацию.');
+        }
+
+        $('#start, #end').on('input', function() {
+            const start = $('#start').val();
+            const end = $('#end').val();
+            $('#requestRide').prop('disabled', !start || !end);
+        });
+
+        $('#requestRide').on('click', function() {
+            const start = $('#start').val();
+            const end = $('#end').val();
+            
+            if (start && end) {
+                $.ajax({
+                    url: 'send_order.php',
+                    method: 'POST',
+                    data: {
+                        from: start,
+                        to: end
+                    },
+                    success: function(response) {
+                        alert("Ответ сервера: " + response);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Ошибка при отправке заказа:", status, error);
+                        alert("Произошла ошибка. Проверьте консоль для подробностей.");
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+ -->
+
+
+
+
+
+ <!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Такси Нурлат</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            overflow: hidden;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            text-align: center;
+        }
+        input, button {
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-top: 0px;
+            margin: 0px 0;
+            border-radius: 10px;
+            border: 0px solid #ccc;
+            text-align: center;
+        }
+        #requestRide {
+            background-color: #000000; 
+            color: #ffffff;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            height: 50px;
+        }
+        #requestRide:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #user-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            align-items: center;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        #user-info img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        #user-info span {
+            font-size: 16px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+
+    <div id="user-info">
+        <img id="avatar" src="https://via.placeholder.com/40" alt="Avatar">
+        <span id="username">Имя пользователя</span>
+    </div>
+
+    <div id="controls">
+        <input type="text" id="start" placeholder="Откуда?">
+        <input type="text" id="end" placeholder="Куда?">
+        <button id="requestRide" disabled>Заказать такси</button>
+    </div>
+
+    <script>
+        ymaps.ready(init);
+        let myMap, userPlacemark;
+
+        function init() {
+            myMap = new ymaps.Map("map", {
+                center: [54.428122, 50.804958], 
+                zoom: 12,
+                controls: [] 
+            });
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const userCoords = [position.coords.latitude, position.coords.longitude];
+                    myMap.setCenter(userCoords, 14);
+                    userPlacemark = new ymaps.Placemark(userCoords, {
+                        hintContent: 'Вы здесь'
+                    }, {
+                        iconColor: '#1E90FF'
+                    });
+                    myMap.geoObjects.add(userPlacemark);
+                }, function(error) {
+                    alert('Не удалось определить ваше местоположение.');
+                });
+            } else {
+                alert('Ваш браузер не поддерживает геолокацию.');
+            }
+        }
+
+        $('#start, #end').on('input', function() {
+            const start = $('#start').val();
+            const end = $('#end').val();
+            $('#requestRide').prop('disabled', !start || !end);
+        });
+
+        $('#requestRide').on('click', function() {
+            const start = $('#start').val();
+            const end = $('#end').val();
+            
+            if (start && end) {
+                $.ajax({
+                    url: 'send_order.php',
+                    method: 'POST',
+                    data: {
+                        from: start,
+                        to: end
+                    },
+                    success: function(response) {
+                        alert("Ответ сервера: " + response);
+                    },
+                    error: function(xhr, status, error) {
+                        console.error("Ошибка при отправке заказа:", status, error);
+                        alert("Произошла ошибка. Проверьте консоль для подробностей.");
+                    }
+                });
+            }
+        });
+
+        $(document).ready(function() {
+            const user = {
+                avatar: 'https://via.placeholder.com/40', 
+                name: 'Иван Иванов'
+            };
+            $('#avatar').attr('src', user.avatar);
+            $('#username').text(user.name);
+        });
+    </script>
+</body>
+</html>
