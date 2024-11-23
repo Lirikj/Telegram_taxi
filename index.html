@@ -8,7 +8,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Обновленные стили, как описано выше */
         body, html {
             margin: 0;
             padding: 0;
@@ -45,7 +44,7 @@
         }
 
         input {
-            outline: none; 
+            outline: none;
             border: none;
             width: 100%;
             padding: 10px 15px;
@@ -143,57 +142,55 @@
                 controls: []
             });
 
+            const tg = window.Telegram.WebApp;
+            tg.ready();
+
+            tg.requestLocation().then((location) => {
+                if (location) {
+                    const userCoords = [location.latitude, location.longitude];
+                    myMap.setCenter(userCoords, 14);
+                    userPlacemark = new ymaps.Placemark(userCoords, {
+                        hintContent: 'Вы здесь (по Telegram)'
+                    }, {
+                        iconColor: '#1E90FF'
+                    });
+                    myMap.geoObjects.add(userPlacemark);
+
+                    $('#start').val(`Широта: ${location.latitude}, Долгота: ${location.longitude}`);
+                }
+            }).catch((error) => {
+                console.error('Ошибка при запросе геолокации Telegram:', error);
+            });
+
+            $('#start, #end').on('input', function() {
+                const start = $('#start').val();
+                const end = $('#end').val();
+                $('#requestRide').prop('disabled', !(start && end));
+            });
+
+            $('#requestRide').on('click', function() {
+                const start = $('#start').val();
+                const end = $('#end').val();
+                const orderData = { from: start, to: end };
+                tg.sendData(JSON.stringify(orderData));
+                tg.close();
+            });
+
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
                     const userCoords = [position.coords.latitude, position.coords.longitude];
                     myMap.setCenter(userCoords, 14);
                     userPlacemark = new ymaps.Placemark(userCoords, {
-                        hintContent: 'Вы здесь'
+                        hintContent: 'Вы здесь (по браузеру)'
                     }, {
-                        iconColor: '#1E90FF'
+                        iconColor: '#FF4500'
                     });
                     myMap.geoObjects.add(userPlacemark);
                 }, function(error) {
-                    alert('Не удалось определить ваше местоположение.');
+                    console.error('Не удалось определить местоположение через браузер:', error.message);
                 });
-            } else {
-                alert('Ваш браузер не поддерживает геолокацию.');
             }
         }
-
-        // Логика активации кнопки
-        $('#start, #end').on('input', function() {
-            const start = $('#start').val();
-            const end = $('#end').val();
-            $('#requestRide').prop('disabled', !(start && end));
-        });
-
-        // Получение данных из Telegram
-        const tg = window.Telegram.WebApp;
-        $(document).ready(function() {
-            tg.ready();
-
-            const user = tg.initDataUnsafe?.user || {};
-            if (user) {
-                $('#avatar').attr('src', user.photo_url || 'https://via.placeholder.com/40');
-                $('#username').text(user.first_name || 'Пользователь');
-            }
-
-            // Обработка кнопки "Заказать такси"
-            $('#requestRide').on('click', function() {
-                const start = $('#start').val();
-                const end = $('#end').val();
-                
-                if (start && end) {
-                    const orderData = { from: start, to: end };
-                    tg.sendData(JSON.stringify(orderData));
-                    tg.close();
-                }
-            });
-
-            // Расширяем WebApp для полного экрана (опционально)
-            tg.expand();
-        });
     </script>
 </body>
 </html>
