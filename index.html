@@ -143,6 +143,20 @@
                 controls: []
             });
 
+            if (Telegram.WebApp) {
+                // Инициализируем WebApp
+                Telegram.WebApp.ready();
+
+                const expandButton = document.getElementById('expandButton');
+                expandButton.addEventListener('click', () => {
+                    Telegram.WebApp.expand();
+
+                    alert('Приложение перешло в полноэкранный режим');
+                });
+            } else {
+                alert('WebApp API недоступно. Проверьте среду выполнения.');
+            }
+
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
                     const userCoords = [position.coords.latitude, position.coords.longitude];
@@ -203,7 +217,6 @@
             console.log('Статус обновлен:', `${emoji} ${status}`);
         }
 
-        // Устанавливаем начальный статус
         updateUserStatus('Online', '🟢');
     </script>
 </body>
