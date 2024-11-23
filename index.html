@@ -44,7 +44,7 @@
         }
 
         input {
-            outline: none;
+            outline: none; 
             border: none;
             width: 100%;
             padding: 10px 15px;
@@ -122,6 +122,7 @@
     <div id="user-info">
         <img id="avatar" src="https://via.placeholder.com/40" alt="Avatar">
         <span id="username">Имя пользователя</span>
+        <span id="status" class="status-emoji">⭐</span>
     </div>
 
     <div id="controls">
@@ -135,97 +136,79 @@
         ymaps.ready(init);
         let myMap, userPlacemark;
 
-        function getSavedLocation() {
-            const savedLocation = localStorage.getItem('userCoords');
-            return savedLocation ? JSON.parse(savedLocation) : null;
-        }
-
-        function saveLocation(coords) {
-            localStorage.setItem('userCoords', JSON.stringify(coords));
-        }
-
-        function requestTelegramLocation() {
-            const tg = window.Telegram.WebApp;
-            return tg.requestLocation().then((location) => {
-                if (location) {
-                    const coords = [location.latitude, location.longitude];
-                    saveLocation(coords);
-                    return coords;
-                }
-                throw new Error('Геолокация через Telegram отклонена');
-            });
-        }
-
-        function requestBrowserLocation() {
-            return new Promise((resolve, reject) => {
-                if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition((position) => {
-                        const coords = [position.coords.latitude, position.coords.longitude];
-                        saveLocation(coords);
-                        resolve(coords);
-                    }, reject);
-                } else {
-                    reject(new Error('Геолокация не поддерживается браузером'));
-                }
-            });
-        }
-
-        function getLocation() {
-            const savedLocation = getSavedLocation();
-            if (savedLocation) {
-                return Promise.resolve(savedLocation);
-            }
-            return requestTelegramLocation().catch(() => requestBrowserLocation());
-        }
-
         function init() {
+            document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color;
+            document.body.style.color = Telegram.WebApp.themeParams.text_color;
+
             myMap = new ymaps.Map("map", {
-                center: [54.428122, 50.804958],
+                center: [54.428122, 50.804958], 
                 zoom: 12,
                 controls: []
             });
 
-            getLocation().then((coords) => {
-                if (coords) {
-                    myMap.setCenter(coords, 14);
-                    userPlacemark = new ymaps.Placemark(coords, {
-                        hintContent: 'Ваше текущее местоположение'
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const userCoords = [position.coords.latitude, position.coords.longitude];
+                    myMap.setCenter(userCoords, 14);
+                    userPlacemark = new ymaps.Placemark(userCoords, {
+                        hintContent: 'Вы здесь'
                     }, {
                         iconColor: '#1E90FF'
                     });
                     myMap.geoObjects.add(userPlacemark);
-                    $('#start').val(`Широта: ${coords[0]}, Долгота: ${coords[1]}`);
-                }
-            }).catch((error) => {
-                console.error('Ошибка при получении координат:', error);
-                alert('Не удалось получить доступ к вашему местоположению.');
-            });
+                }, function(error) {
+                    alert('Не удалось определить ваше местоположение.');
+                });
+            } else {
+                alert('Ваш браузер не поддерживает геолокацию.');
+            }
+        }
 
-            $('#start, #end').on('input', function() {
-                const start = $('#start').val();
-                const end = $('#end').val();
-                $('#requestRide').prop('disabled', !(start && end));
-            });
+        $('#start, #end').on('input', function() {
+            const start = $('#start').val();
+            const end = $('#end').val();
+            $('#requestRide').prop('disabled', !(start && end));
+        });
 
-            $('#requestRide').on('click', function() {
-                const start = $('#start').val();
-                const end = $('#end').val();
-                const tg = window.Telegram.WebApp;
-                tg.sendData(JSON.stringify({ from: start, to: end }));
-                tg.close();
-            });
-
-            const tg = window.Telegram.WebApp;
+        const tg = window.Telegram.WebApp;
+        $(document).ready(function() {
             tg.ready();
 
             const user = tg.initDataUnsafe?.user || {};
             if (user) {
                 $('#avatar').attr('src', user.photo_url || 'https://via.placeholder.com/40');
                 $('#username').text(user.first_name || 'Пользователь');
+                if (user.status_emoji) {
+                    $('#status').text(user.status_emoji);
+                } else {
+                    $('#status').hide();
+                }
+            }
+            if (window.Telegram.WebApp) {
+                const webApp = Telegram.WebApp;
+
+                webApp.expand();
+
+                console.log('Web App viewport height:', webApp.viewportHeight);
+
+                webApp.onEvent('viewportChanged', () => {
+                    console.log('Viewport updated:', webApp.viewportHeight);
+                });
             }
 
+            $('#requestRide').on('click', function() {
+                const start = $('#start').val();
+                const end = $('#end').val();
+                
+                if (start && end) {
+                    const orderData = { from: start, to: end };
+                    tg.sendData(JSON.stringify(orderData));
+                    tg.close();
+                }
+            });
+
             tg.expand();
-        }
+        });
     </script>
 </body>
 </html>
