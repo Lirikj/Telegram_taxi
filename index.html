@@ -122,7 +122,6 @@
     <div id="user-info">
         <img id="avatar" src="https://via.placeholder.com/40" alt="Avatar">
         <span id="username">Имя пользователя</span>
-        <span id="status">🟢 Online</span>
     </div>
 
     <div id="controls">
@@ -133,83 +132,67 @@
     </div>
 
     <script>
-        async function setTelegramUserEmojiStatus(emoji, untilDate) {
-            try {
-                const botToken = '6423951514:AAE848xYBRpAx92gihFxrnWyXr70-ULgev0'; // Вставьте токен вашего Telegram-бота
-                const userId = Telegram.WebApp.initDataUnsafe?.user?.id;
-    
-                if (!userId) {
-                    console.error('Не удалось определить ID пользователя через WebApp API.');
-                    return;
-                }
-    
-                const response = await fetch(`https://api.telegram.org/bot${botToken}/setUserEmojiStatus`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        user_id: userId,
-                        emoji_status: {
-                            emoji: emoji,
-                        },
-                        until_date: untilDate || Math.floor(Date.now() / 1000) + 3600, // Устанавливаем на 1 час
-                    }),
-                });
-    
-                const result = await response.json();
-    
-                if (result.ok) {
-                    console.log(`Эмодзи-статус "${emoji}" успешно установлен.`);
-                } else {
-                    console.error('Ошибка установки эмодзи-статуса:', result.description);
-                }
-            } catch (error) {
-                console.error('Ошибка вызова Bot API:', error);
-            }
-        }
-    
-        $(document).ready(function () {
-            const tg = window.Telegram.WebApp;
-    
-            if (!tg) {
-                console.error('Telegram WebApp API недоступен.');
-                return;
-            }
-    
-            tg.ready();
-    
-            // Устанавливаем статус "В пути" при загрузке страницы
-            setTelegramUserEmojiStatus('🚖', Math.floor(Date.now() / 1000) + 3600);
-    
-            // Обновляем статус на "Готово", когда заказ подтверждён
-            $('#requestRide').on('click', function () {
-                const start = $('#start').val().trim();
-                const end = $('#end').val().trim();
-    
-                if (start && end) {
-                    // Установка статуса с эмодзи
-                    setTelegramUserEmojiStatus('✅', Math.floor(Date.now() / 1000) + 7200); // На 2 часа
-                    alert('Такси заказано!');
-                } else {
-                    alert('Введите начальную и конечную точки маршрута.');
-                }
-            });
-    
-            // Активируем кнопку заказа при вводе данных
-            $('#start, #end').on('input', function () {
-                const start = $('#start').val().trim();
-                const end = $('#end').val().trim();
-    
-                if (start && end) {
-                    $('#requestRide').prop('disabled', false);
-                } else {
-                    $('#requestRide').prop('disabled', true);
-                }
-            });
-        });
-    </script>
-    
+        ymaps.ready(init);
+        let myMap, userPlacemark;
 
+        function init() {
+            myMap = new ymaps.Map("map", {
+                center: [54.428122, 50.804958],
+                zoom: 12,
+                controls: []
+            });
+
+            const tg = Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+
+            // Telegram LocationManager API
+            tg.locationManager.requestLocation()
+                .then(location => {
+                    const userCoords = [location.latitude, location.longitude];
+                    console.log('Местоположение через Telegram:', userCoords);
+
+                    // Установить центр карты на текущее местоположение
+                    myMap.setCenter(userCoords, 14);
+                    userPlacemark = new ymaps.Placemark(userCoords, {
+                        hintContent: 'Вы здесь'
+                    }, {
+                        iconColor: '#1E90FF'
+                    });
+                    myMap.geoObjects.add(userPlacemark);
+
+                    // Заполнить поле "Откуда?"
+                    $('#start').val(`Моё местоположение [${userCoords[0].toFixed(5)}, ${userCoords[1].toFixed(5)}]`);
+                })
+                .catch(error => {
+                    console.error('Ошибка с Telegram LocationManager:', error);
+                });
+
+            $('#start, #end').on('input', function () {
+                const start = $('#start').val();
+                const end = $('#end').val();
+                $('#requestRide').prop('disabled', !(start && end));
+            });
+
+            // Информация о пользователе Telegram
+            const user = tg.initDataUnsafe?.user || {};
+            if (user) {
+                $('#username').text(user.first_name || 'Пользователь');
+                $('#avatar').attr('src', user.photo_url || 'https://via.placeholder.com/40');
+            }
+
+            // Кнопка "Заказать такси"
+            $('#requestRide').on('click', function () {
+                const start = $('#start').val();
+                const end = $('#end').val();
+
+                if (start && end) {
+                    const orderData = { from: start, to: end };
+                    tg.sendData(JSON.stringify(orderData));
+                    tg.close();
+                }
+            });
+        }
+    </script>
 </body>
 </html>
