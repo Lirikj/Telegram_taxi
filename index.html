@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Такси Нурлат</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=6f69ea03-9592-4467-8e56-158143a06026&lang=ru_RU" type="text/javascript"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -26,27 +26,28 @@
         }
         #controls {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(255, 255, 255, 0.9);
+            bottom: 0;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 1);
             padding: 20px;
-            box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2);
-            border-radius: 15px;
+            box-shadow: 0 -10px 20px rgba(0, 0, 0, 0);
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
-            width: 90%;
-            max-width: 400px;
+            gap: 0px;
         }
         input {
-            outline: none;
+            outline: none; /* Убирает выделение рамки при фокусе */
+            border: none; /* Убирает границу */
             width: 100%;
+            max-width: 400px;
             padding: 10px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
             box-sizing: border-box;
+            background-color: #ffffff; /* Задает фон, чтобы поле отличалось */
+            border-radius: 5px; /* Закругленные углы */
+            font-size: 16px; /* Размер текста */
         }
         #requestRide {
             padding: 15px 30px;
@@ -58,6 +59,7 @@
             font-weight: bold;
             text-align: center;
             width: 100%;
+            max-width: 400px;
             cursor: pointer;
         }
         #requestRide:disabled {
@@ -85,6 +87,29 @@
             font-size: 16px;
             font-weight: bold;
         }
+        #start {
+            padding: 15px 20px;
+            font-size: 16px;
+            border-radius: 10px;
+            width: 100%;
+            margin-bottom: 0px;
+            height: 50px;
+        }
+        #end {
+            padding: 15px 20px;
+            font-size: 16px;
+            border-radius: 10px;
+            width: 100%;
+            margin-bottom: 15px;
+            height: 50px;
+        }
+        .divider {
+            width: 100%;
+            height: 1px;
+            background-color: #c4c4c4;
+            opacity: 0.5;
+            margin: 0px 10px; 
+        }
     </style>
 </head>
 <body>
@@ -97,6 +122,7 @@
 
     <div id="controls">
         <input type="text" id="start" placeholder="Откуда?" required>
+        <div class="divider"></div>
         <input type="text" id="end" placeholder="Куда?" required>
         <button id="requestRide" disabled>Заказать такси</button>
     </div>
@@ -105,7 +131,6 @@
         ymaps.ready(init);
         let myMap, userPlacemark;
 
-        // Функция инициализации карты
         function init() {
             myMap = new ymaps.Map("map", {
                 center: [54.428122, 50.804958], 
@@ -131,6 +156,7 @@
             }
         }
 
+        // Логика активации кнопки
         $('#start, #end').on('input', function() {
             const start = $('#start').val();
             const end = $('#end').val();
