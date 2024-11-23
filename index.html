@@ -172,14 +172,17 @@
 
         const tg = window.Telegram.WebApp;
         $(document).ready(function() {
+            const tg = window.Telegram.WebApp;
+
             tg.ready();
+            tg.expand();
 
             const user = tg.initDataUnsafe?.user || {};
             if (user) {
                 $('#avatar').attr('src', user.photo_url || 'https://via.placeholder.com/40');
                 $('#username').text(user.first_name || 'Пользователь');
-                if (user.status_emoji) {
-                    $('#status').text(user.status_emoji);
+                if (user.emoji_status_custom_emoji_id) {
+                    $('#status').text(String.fromCodePoint(parseInt(user.emoji_status_custom_emoji_id, 16)));
                 } else {
                     $('#status').hide();
                 }
