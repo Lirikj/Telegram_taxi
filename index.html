@@ -114,92 +114,10 @@
                 font-size: 14px;
             }
         }
-
-        /* Стили для кнопок */
-        #custom-buttons {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            display: flex;
-            gap: 10px;
-        }
-
-        .button {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 25px;
-            font-size: 16px;
-            font-weight: bold;
-            color: #fff;
-            background: linear-gradient(90deg, #8a3ab9, #f7347a);
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        .button:active {
-            transform: translateY(0);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .button span {
-            font-size: 16px;
-            font-weight: bold;
-        }
-
-        .icon {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 24px;
-            height: 24px;
-        }
-
-        .icon.close::before {
-            content: '✖';
-            font-size: 20px;
-        }
-
-        .icon.expand::before {
-            content: '▼';
-            font-size: 20px;
-        }
-
-        .icon.menu::before {
-            content: '⋮';
-            font-size: 20px;
-        }
-
-        .button.right {
-            padding: 10px;
-            gap: 4px;
-            width: 60px;
-            justify-content: space-around;
-        }
     </style>
 </head>
 <body>
     <div id="map"></div>
-
-    <div id="custom-buttons">
-        <button class="button">
-            <div class="icon close"></div>
-            <span>Закрыть</span>
-        </button>
-        <button class="button right">
-            <div class="icon expand"></div>
-            <div class="icon menu"></div>
-        </button>
-    </div>
 
     <div id="user-info">
         <img id="avatar" src="https://via.placeholder.com/40" alt="Avatar">
@@ -215,84 +133,82 @@
     </div>
 
     <script>
-        ymaps.ready(init);
-        let myMap, userPlacemark;
-
-        function init() {
-            myMap = new ymaps.Map("map", {
-                center: [54.428122, 50.804958], 
-                zoom: 12,
-                controls: []
-            });
-
-            if (Telegram.WebApp) {
-                Telegram.WebApp.ready();
-                Telegram.WebApp.expand();
-            } else {
-                console.error('WebApp API недоступно. Проверьте среду выполнения.');
-            }
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    const userCoords = [position.coords.latitude, position.coords.longitude];
-                    myMap.setCenter(userCoords, 14);
-                    userPlacemark = new ymaps.Placemark(userCoords, {
-                        hintContent: 'Вы здесь'
-                    }, {
-                        iconColor: '#1E90FF'
-                    });
-                    myMap.geoObjects.add(userPlacemark);
-
-                    $('#start').val(`Моё местоположение [${userCoords[0].toFixed(5)}, ${userCoords[1].toFixed(5)}]`);
-                }, function(error) {
-                    alert('Не удалось определить ваше местоположение.');
+        async function setTelegramUserEmojiStatus(emoji, untilDate) {
+            try {
+                const botToken = 'ВАШ_ТОКЕН_БОТА'; // Вставьте токен вашего Telegram-бота
+                const userId = Telegram.WebApp.initDataUnsafe?.user?.id;
+    
+                if (!userId) {
+                    console.error('Не удалось определить ID пользователя через WebApp API.');
+                    return;
+                }
+    
+                const response = await fetch(`https://api.telegram.org/bot${botToken}/setUserEmojiStatus`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        emoji_status: {
+                            emoji: emoji,
+                        },
+                        until_date: untilDate || Math.floor(Date.now() / 1000) + 3600, // Устанавливаем на 1 час
+                    }),
                 });
+    
+                const result = await response.json();
+    
+                if (result.ok) {
+                    console.log(`Эмодзи-статус "${emoji}" успешно установлен.`);
+                } else {
+                    console.error('Ошибка установки эмодзи-статуса:', result.description);
+                }
+            } catch (error) {
+                console.error('Ошибка вызова Bot API:', error);
             }
         }
-
-        $('#start, #end').on('input', function() {
-            const start = $('#start').val();
-            const end = $('#end').val();
-            $('#requestRide').prop('disabled', !(start && end));
-        });
-
-        const tg = window.Telegram.WebApp;
-
+    
         $(document).ready(function () {
-            tg.ready();
-
-            const user = tg.initDataUnsafe?.user || {};
-
-            if (user) {
-                const userName = user.first_name || 'Пользователь';
-                const userPhoto = user.photo_url || 'https://via.placeholder.com/40';
-
-                $('#username').text(userName);
-                $('#avatar').attr('src', userPhoto);
-
-                console.log('Имя и аватар обновлены:', userName, userPhoto);
-            } else {
-                console.warn('Пользовательские данные отсутствуют.');
+            const tg = window.Telegram.WebApp;
+    
+            if (!tg) {
+                console.error('Telegram WebApp API недоступен.');
+                return;
             }
-
+    
+            tg.ready();
+    
+            // Устанавливаем статус "В пути" при загрузке страницы
+            setTelegramUserEmojiStatus('🚖', Math.floor(Date.now() / 1000) + 3600);
+    
+            // Обновляем статус на "Готово", когда заказ подтверждён
             $('#requestRide').on('click', function () {
-                const start = $('#start').val();
-                const end = $('#end').val();
-
+                const start = $('#start').val().trim();
+                const end = $('#end').val().trim();
+    
                 if (start && end) {
-                    const orderData = { from: start, to: end };
-                    tg.sendData(JSON.stringify(orderData));
-                    tg.close();
+                    // Установка статуса с эмодзи
+                    setTelegramUserEmojiStatus('✅', Math.floor(Date.now() / 1000) + 7200); // На 2 часа
+                    alert('Такси заказано!');
+                } else {
+                    alert('Введите начальную и конечную точки маршрута.');
+                }
+            });
+    
+            // Активируем кнопку заказа при вводе данных
+            $('#start, #end').on('input', function () {
+                const start = $('#start').val().trim();
+                const end = $('#end').val().trim();
+    
+                if (start && end) {
+                    $('#requestRide').prop('disabled', false);
+                } else {
+                    $('#requestRide').prop('disabled', true);
                 }
             });
         });
-
-        function updateUserStatus(status, emoji) {
-            $('#status').text(`${emoji} ${status}`);
-            console.log('Статус обновлен:', `${emoji} ${status}`);
-        }
-
-        updateUserStatus('Online', '🟢');
     </script>
+    
 </body>
 </html>
