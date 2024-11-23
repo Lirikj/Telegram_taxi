@@ -144,17 +144,11 @@
             });
 
             if (Telegram.WebApp) {
-                // Инициализируем WebApp
                 Telegram.WebApp.ready();
 
-                const expandButton = document.getElementById('expandButton');
-                expandButton.addEventListener('click', () => {
-                    Telegram.WebApp.expand();
-
-                    alert('Приложение перешло в полноэкранный режим');
-                });
+                Telegram.WebApp.expand();
             } else {
-                alert('WebApp API недоступно. Проверьте среду выполнения.');
+                console.error('WebApp API недоступно. Проверьте среду выполнения.');
             }
 
             if (navigator.geolocation) {
