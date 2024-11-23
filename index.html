@@ -142,6 +142,7 @@
 
         updateUserStatus('Online', '🟢');
         tg.expand();
+        
 
         function init() {
             document.body.style.backgroundColor = Telegram.WebApp.themeParams.bg_color;
@@ -178,42 +179,38 @@
         });
 
         const tg = window.Telegram.WebApp;
-        $(document).ready(function() {
+        $(document).ready(function () {
             const tg = window.Telegram.WebApp;
 
             tg.ready();
             tg.expand();
 
             const user = tg.initDataUnsafe?.user || {};
+
             if (user) {
-                $('#avatar').attr('src', user.photo_url || 'https://via.placeholder.com/40');
                 $('#username').text(user.first_name || 'Пользователь');
-            }
-            if (window.Telegram.WebApp) {
-                const webApp = Telegram.WebApp;
-
-                webApp.expand();
-
-                console.log('Web App viewport height:', webApp.viewportHeight);
-
-                webApp.onEvent('viewportChanged', () => {
-                    console.log('Viewport updated:', webApp.viewportHeight);
-                });
+                $('#avatar').attr('src', user.photo_url || 'https://via.placeholder.com/40');
+            } else {
+                console.warn('Не удалось загрузить данные пользователя.');
             }
 
-            $('#requestRide').on('click', function() {
+            updateUserStatus('Online', '🟢');
+
+            $('#requestRide').on('click', function () {
                 const start = $('#start').val();
                 const end = $('#end').val();
-                
+
                 if (start && end) {
                     const orderData = { from: start, to: end };
                     tg.sendData(JSON.stringify(orderData));
                     tg.close();
                 }
             });
-
-            tg.expand();
         });
+
+        function updateUserStatus(status, emoji) {
+            $('#status').text(`${emoji} ${status}`);
+        }
     </script>
 </body>
 </html>
