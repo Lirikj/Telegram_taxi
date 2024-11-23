@@ -190,10 +190,17 @@
             const user = tg.initDataUnsafe?.user || {};
 
             if (user) {
-                $('#avatar').attr('src', user.photo_url || 'https://via.placeholder.com/40');
-                $('#username').text(user.first_name || 'Пользователь');
+                console.log('Данные пользователя:', user); 
+
+                const userName = user.first_name || 'Пользователь';
+                $('#username').text(userName);
+
+                const userPhoto = user.photo_url || 'https://via.placeholder.com/40';
+                $('#avatar').attr('src', userPhoto);
+
+                console.log('Имя и аватар обновлены:', userName, userPhoto);
             } else {
-                console.warn('Не удалось загрузить данные пользователя.');
+                console.warn('Пользовательские данные отсутствуют.');
             }
 
             updateUserStatus('Online', '🟢');
@@ -210,10 +217,11 @@
             });
         });
 
-        // Функция обновления статуса
         function updateUserStatus(status, emoji) {
             $('#status').text(`${emoji} ${status}`);
+            console.log('Статус обновлен:', `${emoji} ${status}`);
         }
+
 
     </script>
 </body>
