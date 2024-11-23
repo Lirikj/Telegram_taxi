@@ -185,11 +185,13 @@
             tg.ready();
             tg.expand();
 
+            console.log('Telegram initDataUnsafe:', tg.initDataUnsafe);
+
             const user = tg.initDataUnsafe?.user || {};
 
             if (user) {
-                $('#username').text(user.first_name || 'Пользователь');
                 $('#avatar').attr('src', user.photo_url || 'https://via.placeholder.com/40');
+                $('#username').text(user.first_name || 'Пользователь');
             } else {
                 console.warn('Не удалось загрузить данные пользователя.');
             }
@@ -208,9 +210,11 @@
             });
         });
 
+        // Функция обновления статуса
         function updateUserStatus(status, emoji) {
             $('#status').text(`${emoji} ${status}`);
         }
+
     </script>
 </body>
 </html>
