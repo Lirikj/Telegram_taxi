@@ -2,10 +2,8 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Такси Нурлат</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <title>Отслеживание местоположения</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body, html {
@@ -14,175 +12,79 @@
             width: 100%;
             height: 100%;
             font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             background-color: #f4f4f4;
-            overflow: hidden;
         }
-        #map {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            top: 0;
-            left: 0;
-        }
-        #controls {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            background-color: #ffffff;
-            height: 20%;
-            padding: 20px;
-            box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2);
-            border-top-left-radius: 15px;
-            border-top-right-radius: 15px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center; /* Центрирование содержимого */
-            gap: 10px; /* Отступы между элементами */
-        }
-        .input-group {
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            gap: 10px;
-        }
-        input {
-            outline: none;
-            width: 100%;
-            padding: 10px;
-            border: 0px solid #ccc;
-            border-radius: 5px;
-            box-sizing: border-box;
-        }
-        #requestRide {
-            padding: 20px 30px;
-            background-color: #000000;
-            color: #ffffff;
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: bold;
+        #location-info {
+            font-size: 16px;
+            margin-bottom: 20px;
             text-align: center;
-            display: block;
-            width: 80%;
-            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            color: white;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
         }
-        #requestRide:disabled {
+        button:disabled {
             background-color: #ccc;
             cursor: not-allowed;
-        }
-        #user-info {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            display: flex;
-            align-items: center;
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 5px 10px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-        #user-info img {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 10px;
-        }
-        #user-info span {
-            font-size: 16px;
-            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <div id="map"></div>
-
-    <div id="user-info">
-        <img id="avatar" src="https://via.placeholder.com/40" alt="Avatar">
-        <span id="username">Имя пользователя</span>
-    </div>
-
-    <div id="controls">
-        <div class="input-group">
-            <input type="text" id="start" placeholder="Откуда?">
-            <input type="text" id="end" placeholder="Куда?">
-        </div>
-        <button id="requestRide" disabled>Заказать такси</button>
-    </div>
-
+    <div id="location-info">Местоположение не определено.</div>
+    <button id="start-tracking">Начать отслеживание</button>
     <script>
-        ymaps.ready(init);
-        let myMap, userPlacemark;
-
-        // Функция инициализации карты
-        function init() {
-            myMap = new ymaps.Map("map", {
-                center: [54.428122, 50.804958], 
-                zoom: 12,
-                controls: []
-            });
-
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(function(position) {
-                    const userCoords = [position.coords.latitude, position.coords.longitude];
-                    myMap.setCenter(userCoords, 14);
-                    userPlacemark = new ymaps.Placemark(userCoords, {
-                        hintContent: 'Вы здесь'
-                    }, {
-                        iconColor: '#1E90FF'
-                    });
-                    myMap.geoObjects.add(userPlacemark);
-                }, function(error) {
-                    alert('Не удалось определить ваше местоположение.');
-                });
-            } else {
-                alert('Ваш браузер не поддерживает геолокацию.');
-            }
-        }
-
-        // Логика активации кнопки
-        $('#start, #end').on('input', function() {
-            const start = $('#start').val();
-            const end = $('#end').val();
-            $('#requestRide').prop('disabled', !start || !end);
-        });
-
-        // Отправка данных о заказе
-        $('#requestRide').on('click', function() {
-            const start = $('#start').val();
-            const end = $('#end').val();
-            
-            if (start && end) {
-                $.ajax({
-                    url: 'send_order.php',
-                    method: 'POST',
-                    data: {
-                        from: start,
-                        to: end
-                    },
-                    success: function(response) {
-                        alert("Ответ сервера: " + response);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Ошибка при отправке заказа:", status, error);
-                        alert("Произошла ошибка. Проверьте консоль для подробностей.");
-                    }
-                });
-            }
-        });
-
-        // Получение данных из Telegram
         const tg = window.Telegram.WebApp;
-        $(document).ready(function() {
-            const user = tg.initDataUnsafe?.user || {};
-            if (user) {
-                $('#avatar').attr('src', user.photo_url || 'https://via.placeholder.com/40');
-                $('#username').text(user.first_name || 'Пользователь');
-            }
-        });
 
-        
+        const locationInfo = document.getElementById('location-info');
+        const startTrackingButton = document.getElementById('start-tracking');
+
+        let locationManager;
+
+        // Инициализация приложения
+        tg.ready(() => {
+            tg.expand(); // Расширяем приложение на весь экран
+
+            // Проверяем поддержку LocationManager
+            if (!window.Telegram.WebApp.LocationManager) {
+                locationInfo.innerText = 'LocationManager не поддерживается вашим Telegram.';
+                startTrackingButton.disabled = true;
+                return;
+            }
+
+            // Инициализируем LocationManager
+            locationManager = new window.Telegram.WebApp.LocationManager();
+
+            startTrackingButton.addEventListener('click', () => {
+                // Запрашиваем доступ к местоположению
+                locationManager.requestAccess()
+                    .then(() => {
+                        locationInfo.innerText = 'Доступ к местоположению предоставлен. Ожидание обновлений...';
+
+                        // Подписываемся на изменения местоположения
+                        locationManager.on('locationChanged', (location) => {
+                            const { latitude, longitude, accuracy } = location;
+                            locationInfo.innerText = `Широта: ${latitude.toFixed(6)}, Долгота: ${longitude.toFixed(6)} (Точность: ${accuracy} м)`;
+                        });
+
+                        // Обрабатываем ошибки местоположения
+                        locationManager.on('locationError', (error) => {
+                            locationInfo.innerText = `Ошибка при получении местоположения: ${error.message}`;
+                        });
+                    })
+                    .catch((error) => {
+                        locationInfo.innerText = `Доступ к местоположению отклонен: ${error.message}`;
+                    });
+            });
+        });
     </script>
 </body>
 </html>
