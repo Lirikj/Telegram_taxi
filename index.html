@@ -176,12 +176,22 @@
 
             $(document).ready(function() {
                 const user = tg.initDataUnsafe?.user || {};
-                if (user) {
-                    $('#avatar').attr('src', user.photo_url || 'https://via.placeholder.com/40');
-                    $('#username').text(user.first_name || 'Пользователь');
+                
+                if (user && Object.keys(user).length) {
+                    const avatar = user.photo_url || 'https://via.placeholder.com/40';
+                    const username = user.first_name || 'Пользователь';
+                    
+                    $('#avatar').attr('src', avatar);
+                    $('#username').text(username);
+                } else {
+                    console.warn('Данные пользователя отсутствуют или недоступны');
+                    $('#avatar').attr('src', 'https://via.placeholder.com/40');
+                    $('#username').text('Гость');
                 }
+
                 tg.expand(); 
             });
+
 
             // Кнопка "Заказать такси"
             $('#requestRide').on('click', function () {
