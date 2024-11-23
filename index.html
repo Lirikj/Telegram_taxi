@@ -4,26 +4,19 @@
     <meta charset="UTF-8">
     <title>Такси Нурлат</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Подключение Yandex Maps API -->
     <script src="https://api-maps.yandex.ru/2.1/?lang=ru_RU" type="text/javascript"></script>
-    <!-- Подключение jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <!-- Подключение Google Fonts для улучшения типографики -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        /* Общие стили */
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-            font-family: 'Roboto', Arial, sans-serif;
+            font-family: Arial, sans-serif;
             background-color: #f4f4f4;
             overflow: hidden;
-            position: relative;
         }
-
-        /* Карта */
         #map {
             width: 100%;
             height: 100%;
@@ -31,151 +24,82 @@
             top: 0;
             left: 0;
         }
-
-        /* Контейнер управления */
         #controls {
             position: absolute;
             bottom: 0;
             width: 100%;
-            background: rgba(255, 255, 255, 0.95);
-            padding: 20px 30px;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-            border-top-left-radius: 20px;
-            border-top-right-radius: 20px;
+            background-color: #ffffff;
+            height: 20%;
+            padding: 20px;
+            box-shadow: 0 10px 10px rgba(0, 0, 0, 0.2);
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            overflow-y: auto;
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            box-sizing: border-box;
-            align-items: center; /* Центрирование содержимого по горизонтали */
+            align-items: center; /* Центрирование содержимого */
+            gap: 10px; /* Отступы между элементами */
         }
-
-        /* Группа полей ввода */
         .input-group {
             display: flex;
             flex-direction: column;
+            width: 100%;
             gap: 10px;
-            width: 100%; /* Растягивается на всю ширину контейнера */
-            max-width: 500px; /* Максимальная ширина для больших экранов */
         }
-
-        /* Стили для инпутов */
         input {
-            padding: 12px 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-            width: 100%; /* Инпуты занимают всю доступную ширину */
+            outline: none;
+            width: 100%;
+            padding: 10px;
+            border: 0px solid #ccc;
+            border-radius: 5px;
             box-sizing: border-box;
         }
-
-        input:focus {
-            border-color: #1E90FF;
-            outline: none;
-        }
-
-        /* Кнопка заказа такси */
         #requestRide {
-            padding: 15px 0;
-            background-color: #1E90FF;
+            padding: 20px 30px;
+            background-color: #000000;
             color: #ffffff;
             border: none;
-            border-radius: 10px;
+            border-radius: 12px;
             font-size: 18px;
-            font-weight: 500;
+            font-weight: bold;
+            text-align: center;
+            display: block;
+            width: 80%;
+            box-sizing: border-box;
             cursor: pointer;
-            transition: background-color 0.3s, transform 0.2s;
-            width: 100%; /* Полная ширина на маленьких экранах */
-            max-width: 300px; /* Максимальная ширина кнопки */
-            margin-top: 10px; /* Отступ сверху */
         }
-
-        #requestRide:hover:not(:disabled) {
-            background-color: #1C86EE;
-            transform: translateY(-2px);
-        }
-
         #requestRide:disabled {
-            background-color: #a0a0a0;
+            background-color: #ccc;
             cursor: not-allowed;
         }
-
-        /* Информация о пользователе */
         #user-info {
             position: absolute;
-            top: 20px;
-            left: 20px;
+            top: 10px;
+            left: 10px;
             display: flex;
             align-items: center;
-            background-color: rgba(255, 255, 255, 0.95);
-            padding: 10px 15px;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 5px 10px;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            z-index: 10;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
         }
-
         #user-info img {
-            width: 50px;
-            height: 50px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
             margin-right: 10px;
-            object-fit: cover;
         }
-
         #user-info span {
-            font-size: 18px;
-            font-weight: 500;
-            color: #333;
-        }
-
-        /* Кнопка Telegram Login */
-        #telegram-login {
-            margin-top: 20px;
-        }
-
-        /* Адаптивность */
-        @media (max-width: 600px) {
-            #controls {
-                padding: 15px 20px;
-            }
-
-            input {
-                font-size: 14px;
-                padding: 10px 12px;
-            }
-
-            #requestRide {
-                font-size: 16px;
-                padding: 12px 0;
-                max-width: 100%; /* Кнопка занимает всю ширину на маленьких экранах */
-            }
-
-            #user-info {
-                top: 10px;
-                left: 10px;
-                padding: 8px 12px;
-            }
-
-            #user-info img {
-                width: 40px;
-                height: 40px;
-            }
-
-            #user-info span {
-                font-size: 16px;
-            }
-
-            .input-group {
-                max-width: 100%; /* Группа инпутов не ограничена на маленьких экранах */
-            }
+            font-size: 16px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
 
-    <div id="user-info" style="display: none;">
-        <img id="avatar" src="https://via.placeholder.com/50" alt="Avatar">
+    <div id="user-info">
+        <img id="avatar" src="https://via.placeholder.com/40" alt="Avatar">
         <span id="username">Имя пользователя</span>
     </div>
 
@@ -185,22 +109,13 @@
             <input type="text" id="end" placeholder="Куда?">
         </div>
         <button id="requestRide" disabled>Заказать такси</button>
-        <!-- Кнопка Telegram Login -->
-        <div id="telegram-login">
-            <script async src="https://telegram.org/js/telegram-widget.js?7"
-                data-telegram-login="YOUR_TELEGRAM_BOT_USERNAME" 
-                data-size="large"
-                data-userpic="false"
-                data-auth-url="https://yourdomain.com/auth/telegram" 
-                data-request-access="write">
-            </script>
-        </div>
     </div>
 
     <script>
         ymaps.ready(init);
         let myMap, userPlacemark;
 
+        // Функция инициализации карты
         function init() {
             myMap = new ymaps.Map("map", {
                 center: [54.428122, 50.804958], 
@@ -226,24 +141,19 @@
             }
         }
 
-        // Проверка заполненности полей ввода
+        // Логика активации кнопки
         $('#start, #end').on('input', function() {
-            const start = $('#start').val().trim();
-            const end = $('#end').val().trim();
-            $('#requestRide').prop('disabled', !(start && end));
+            const start = $('#start').val();
+            const end = $('#end').val();
+            $('#requestRide').prop('disabled', !start || !end);
         });
 
-        // Обработка клика по кнопке заказа такси
+        // Отправка данных о заказе
         $('#requestRide').on('click', function() {
-            const start = $('#start').val().trim();
-            const end = $('#end').val().trim();
+            const start = $('#start').val();
+            const end = $('#end').val();
             
             if (start && end) {
-                // Можно добавить здесь валидацию адресов или автодополнение
-
-                // Отображение индикатора загрузки
-                $('#requestRide').text('Обработка заказа...').prop('disabled', true);
-
                 $.ajax({
                     url: 'send_order.php',
                     method: 'POST',
@@ -253,54 +163,26 @@
                     },
                     success: function(response) {
                         alert("Ответ сервера: " + response);
-                        $('#requestRide').text('Заказать такси').prop('disabled', false);
-                        // Можно очистить поля ввода после успешного заказа
-                        $('#start').val('');
-                        $('#end').val('');
                     },
                     error: function(xhr, status, error) {
                         console.error("Ошибка при отправке заказа:", status, error);
                         alert("Произошла ошибка. Проверьте консоль для подробностей.");
-                        $('#requestRide').text('Заказать такси').prop('disabled', false);
                     }
                 });
             }
         });
 
-        // Настройка информации о пользователе при загрузке страницы
-        function displayUserInfo(user) {
-            $('#avatar').attr('src', user.photo_url || 'https://via.placeholder.com/50');
-            $('#username').text(user.first_name || 'Пользователь');
-            $('#user-info').show();
-            $('#telegram-login').hide();
-        }
-
-        // Обработка данных Telegram после авторизации
-        window.TelegramLoginWidget = {
-            onAuth: function(user) {
-                // Отправка данных на сервер для проверки подписи
-                fetch('https://yourdomain.com/auth/telegram', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(user)
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'ok') {
-                        // Успешная авторизация
-                        displayUserInfo(data.user);
-                    } else {
-                        alert('Ошибка авторизации через Telegram.');
-                    }
-                })
-                .catch(error => {
-                    console.error('Ошибка при авторизации через Telegram:', error);
-                    alert('Произошла ошибка при авторизации.');
-                });
+        // Получение данных из Telegram
+        const tg = window.Telegram.WebApp;
+        $(document).ready(function() {
+            const user = tg.initDataUnsafe?.user || {};
+            if (user) {
+                $('#avatar').attr('src', user.photo_url || 'https://via.placeholder.com/40');
+                $('#username').text(user.first_name || 'Пользователь');
             }
-        };
+        });
+
+        
     </script>
 </body>
 </html>
