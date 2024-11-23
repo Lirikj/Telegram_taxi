@@ -8,6 +8,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        /* Обновленные стили, как описано выше */
         body, html {
             margin: 0;
             padding: 0;
@@ -16,7 +17,9 @@
             font-family: Arial, sans-serif;
             background-color: #f4f4f4;
             overflow: hidden;
+            box-sizing: border-box;
         }
+
         #map {
             width: 100%;
             height: 100%;
@@ -24,33 +27,36 @@
             top: 0;
             left: 0;
         }
+
         #controls {
             position: absolute;
             bottom: 0;
             width: 100%;
             background-color: rgba(255, 255, 255, 1);
-            padding: 20px;
-            box-shadow: 0 -10px 20px rgba(0, 0, 0, 0);
+            padding: 20px 15px;
+            box-shadow: 0 -10px 20px rgba(0, 0, 0, 0.1);
             border-top-left-radius: 15px;
             border-top-right-radius: 15px;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 0px;
-        }
-        input {
-            outline: none; /* Убирает выделение рамки при фокусе */
-            border: none; /* Убирает границу */
-            width: 100%;
-            max-width: 400px;
-            padding: 10px;
+            align-items: stretch;
+            gap: 10px;
             box-sizing: border-box;
-            background-color: #ffffff; /* Задает фон, чтобы поле отличалось */
-            border-radius: 5px; /* Закругленные углы */
-            font-size: 16px; /* Размер текста */
         }
+
+        input {
+            outline: none; 
+            border: none;
+            width: 100%;
+            padding: 10px 15px;
+            box-sizing: border-box;
+            background-color: #ffffff;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+
         #requestRide {
-            padding: 15px 30px;
+            padding: 15px 0;
             background-color: #000000;
             color: #ffffff;
             border: none;
@@ -59,13 +65,14 @@
             font-weight: bold;
             text-align: center;
             width: 100%;
-            max-width: 400px;
             cursor: pointer;
         }
+
         #requestRide:disabled {
             background-color: #ccc;
             cursor: not-allowed;
         }
+
         #user-info {
             position: absolute;
             top: 10px;
@@ -76,39 +83,37 @@
             padding: 5px 10px;
             border-radius: 10px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            box-sizing: border-box;
         }
+
         #user-info img {
             width: 40px;
             height: 40px;
             border-radius: 50%;
             margin-right: 10px;
         }
+
         #user-info span {
             font-size: 16px;
             font-weight: bold;
         }
-        #start {
-            padding: 15px 20px;
-            font-size: 16px;
-            border-radius: 10px;
-            width: 100%;
-            margin-bottom: 0px;
-            height: 50px;
-        }
-        #end {
-            padding: 15px 20px;
-            font-size: 16px;
-            border-radius: 10px;
-            width: 100%;
-            margin-bottom: 15px;
-            height: 50px;
-        }
+
         .divider {
             width: 100%;
             height: 1px;
             background-color: #c4c4c4;
             opacity: 0.5;
-            margin: 0px 10px; 
+            margin: 0px 0;
+        }
+
+        @media (max-width: 600px) {
+            #controls {
+                padding: 15px 10px;
+            }
+
+            input, #requestRide {
+                font-size: 14px;
+            }
         }
     </style>
 </head>
@@ -160,42 +165,34 @@
         $('#start, #end').on('input', function() {
             const start = $('#start').val();
             const end = $('#end').val();
-            $('#requestRide').prop('disabled', !start || !end);
-        });
-
-        // Отправка данных о заказе
-        $('#requestRide').on('click', function() {
-            const start = $('#start').val();
-            const end = $('#end').val();
-            
-            if (start && end) {
-                $.ajax({
-                    url: 'send_order.php',
-                    method: 'POST',
-                    data: {
-                        from: start,
-                        to: end
-                    },
-                    success: function(response) {
-                        alert("Ответ сервера: " + response);
-                    },
-                    error: function(xhr, status, error) {
-                        console.error("Ошибка при отправке заказа:", status, error);
-                        alert("Произошла ошибка. Проверьте консоль для подробностей.");
-                    }
-                });
-            }
+            $('#requestRide').prop('disabled', !(start && end));
         });
 
         // Получение данных из Telegram
         const tg = window.Telegram.WebApp;
         $(document).ready(function() {
+            tg.ready();
+
             const user = tg.initDataUnsafe?.user || {};
             if (user) {
                 $('#avatar').attr('src', user.photo_url || 'https://via.placeholder.com/40');
                 $('#username').text(user.first_name || 'Пользователь');
             }
-            tg.expand(); // Расширяем WebApp
+
+            // Обработка кнопки "Заказать такси"
+            $('#requestRide').on('click', function() {
+                const start = $('#start').val();
+                const end = $('#end').val();
+                
+                if (start && end) {
+                    const orderData = { from: start, to: end };
+                    tg.sendData(JSON.stringify(orderData));
+                    tg.close();
+                }
+            });
+
+            // Расширяем WebApp для полного экрана (опционально)
+            tg.expand();
         });
     </script>
 </body>
