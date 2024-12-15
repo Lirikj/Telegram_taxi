@@ -131,75 +131,81 @@
         <button id="requestRide" disabled>Заказать такси</button>
     </div>
 
-    <script>
-        ymaps.ready(init);
-        let myMap, userPlacemark;
-    
-        function init() {
-            myMap = new ymaps.Map("map", {
-                center: [54.428122, 50.804958],
-                zoom: 12,
-                controls: []
-            });
-    
-            const tg = Telegram.WebApp;
-            tg.ready();
-            tg.expand();
-    
-            tg.locationManager.requestLocation()
-                .then(location => {
-                    const userCoords = [location.latitude, location.longitude];
-                    console.log('Местоположение через Telegram:', userCoords);
-    
-                    myMap.setCenter(userCoords, 14);
-                    userPlacemark = new ymaps.Placemark(userCoords, {
-                        hintContent: 'Вы здесь'
-                    }, {
-                        iconColor: '#1E90FF'
-                    });
-                    myMap.geoObjects.add(userPlacemark);
-    
-                    $('#start').val(`Моё местоположение [${userCoords[0].toFixed(5)}, ${userCoords[1].toFixed(5)}]`);
-                })
-                .catch(error => {
-                    console.error('Ошибка с Telegram LocationManager:', error);
+<script>
+    ymaps.ready(init);
+    let myMap, userPlacemark;
+
+    function init() {
+        myMap = new ymaps.Map("map", {
+            center: [54.428122, 50.804958],
+            zoom: 12,
+            controls: []
+        });
+
+        const tg = Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+
+        tg.locationManager.requestLocation()
+            .then(location => {
+                const userCoords = [location.latitude, location.longitude];
+                console.log('Местоположение через Telegram:', userCoords);
+
+                myMap.setCenter(userCoords, 14);
+                userPlacemark = new ymaps.Placemark(userCoords, {
+                    hintContent: 'Вы здесь'
+                }, {
+                    iconColor: '#1E90FF'
                 });
-    
-            $('#start, #end').on('input', function () {
-                const start = $('#start').val();
-                const end = $('#end').val();
-                $('#requestRide').prop('disabled', !(start && end));
+                myMap.geoObjects.add(userPlacemark);
+
+                $('#start').val(`Моё местоположение [${userCoords[0].toFixed(5)}, ${userCoords[1].toFixed(5)}]`);
+            })
+            .catch(error => {
+                console.error('Ошибка с Telegram LocationManager:', error);
             });
-    
-            $(document).ready(function() {
-                const user = tg.initDataUnsafe?.user || {}; 
-    
-                if (user && Object.keys(user).length) {
-                    const avatar = user.photo_url || 'https://via.placeholder.com/40'; 
-                    const username = user.first_name || 'Пользователь'; 
-                    
-                    $('#avatar').attr('src', avatar);
-                    $('#username').text(username);
-                } else {
-                    console.warn('Данные пользователя отсутствуют или недоступны');
-                    $('#avatar').attr('src', 'https://via.placeholder.com/40');
-                    $('#username').text('Гость');
-                }
-    
-                tg.expand(); 
-            });
-    
-            $('#requestRide').on('click', function () {
-                const start = $('#start').val();
-                const end = $('#end').val();
-    
-                if (start && end) {
-                    const orderData = { from: start, to: end };
-                    tg.sendData(JSON.stringify(orderData));
-                    tg.close();
-                }
-            });
-        }
-    </script>    
+
+        $('#start, #end').on('input', function () {
+            const start = $('#start').val();
+            const end = $('#end').val();
+            $('#requestRide').prop('disabled', !(start && end));
+        });
+
+        $(document).ready(function() {
+            const tg = Telegram.WebApp;
+
+            console.log("Данные Telegram Web App:", tg.initDataUnsafe);
+
+            const user = tg.initDataUnsafe?.user || {}; 
+
+            if (user && user.first_name) {
+                console.log("Пользователь найден:", user);
+                const avatar = user.photo_url || 'https://via.placeholder.com/40'; 
+                const username = user.first_name || 'Пользователь'; 
+
+                $('#avatar').attr('src', avatar);
+                $('#username').text(username);
+            } else {
+                console.warn('Данные пользователя отсутствуют или недоступны');
+                $('#avatar').attr('src', 'https://via.placeholder.com/40');
+                $('#username').text('Гость');
+            }
+
+            tg.expand(); 
+        });
+
+        $('#requestRide').on('click', function () {
+            const start = $('#start').val();
+            const end = $('#end').val();
+
+            if (start && end) {
+                const orderData = { from: start, to: end };
+                tg.sendData(JSON.stringify(orderData));
+                tg.close();
+            }
+        });
+    }
+</script>
+
 </body>
 </html>
